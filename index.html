@@ -46,5 +46,26 @@ function previewAdmin(b){const others=S.users.filter(u=>!u.owner);b.innerHTML=ot
 function checkAdmin(b){const issues=[];S.items.filter(i=>i.active&&i.type==='link'&&!i.link).forEach(i=>issues.push('⚠ «'+i.name+'» بدون رابط'));S.items.filter(i=>i.active&&i.type==='dashboard'&&!S.items.some(x=>x.parent===i.id&&x.active)).forEach(i=>issues.push('⚠ الداشبورد «'+i.name+'» فارغ'));S.users.filter(u=>!u.owner&&!S.items.some(i=>i.active&&i.allowed.includes(u.id))).forEach(u=>issues.push('⚠ المستخدم «'+u.username+'» لا يملك صلاحية لأي عنصر'));S.items.filter(i=>!i.active).forEach(i=>issues.push('ℹ العنصر «'+i.name+'» مخفي'));b.innerHTML=`<div class="note">فحص سريع للإعدادات قبل النسخ الاحتياطي أو الرفع إلى GitHub. لا يغيّر أي شيء.</div><div class="list">${issues.length?issues.map(x=>`<div class="row"><div class="grow">${esc(x)}</div></div>`).join(''):'<div class="empty">✓ لم يتم العثور على ملاحظات واضحة.</div>'}</div>`}
 function logsAdmin(b){const logs=Array.isArray(S.logs)?S.logs:[];b.innerHTML=`<div class="note">آخر 20 تغييراً مسجلاً محلياً للمالك.</div><div class="list">${logs.length?logs.map(l=>`<div class="row"><div class="grow"><b>${esc(l.text)}</b><small class="muted" style="display:block">${new Date(l.at).toLocaleString('ar-IQ')}</small></div></div>`).join(''):'<div class="empty">لا توجد تغييرات مسجلة بعد.</div>'}</div>`}
 function readImage(file,cb){if(!file)return;if(file.size>2*1024*1024)return toast('حجم الصورة كبير. اختر صورة أقل من 2MB');const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(file)}function bindEyes(){document.querySelectorAll('[data-eye]').forEach(b=>b.onclick=()=>{const i=document.getElementById(b.dataset.eye);i.type=i.type==='password'?'text':'password'})}
-async function boot(){try{const r=await fetch('./data.json',{cache:'no-store'});if(r.ok){const n=await r.json();if(n&&Array.isArray(n.users)&&Array.isArray(n.items)&&n.branding){S=n;S.branding.siteLogo=S.branding.siteLogo||''}}}catch(e){}login()}boot();})();
+async function boot(){
+  // إذا توجد تعديلات محلية محفوظة في هذا المتصفح، لا نستبدلها بملف data.json عند كل تحديث للصفحة.
+  // data.json يُستخدم فقط كبداية على الأجهزة/المتصفحات التي لا تملك نسخة محلية بعد.
+  let local=null;
+  try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(local&&Array.isArray(local.users)&&Array.isArray(local.items)&&local.branding){
+    S=local;
+  }else{
+    try{
+      const r=await fetch('./data.json?ts='+Date.now(),{cache:'no-store'});
+      if(r.ok){
+        const n=await r.json();
+        if(n&&Array.isArray(n.users)&&Array.isArray(n.items)&&n.branding){S=n;save()}
+      }
+    }catch(e){}
+  }
+  S.branding=S.branding||{};
+  S.branding.siteLogo=S.branding.siteLogo||'';
+  S.branding.loginLogo=S.branding.loginLogo||'';
+  S.logs=Array.isArray(S.logs)?S.logs:[];
+  login();
+}boot();})();
 </script></body></html>
