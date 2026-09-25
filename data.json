@@ -1,0 +1,143 @@
+{
+  "branding": {
+    "company": "شركة بوابة الرافدين لتجهيز مواد البناء",
+    "welcome": "مرحباً بك",
+    "subtitle": "الرجاء تسجيل الدخول للمتابعة",
+    "footer": "بوابة الشركات والحسابات",
+    "loginLogo": ""
+  },
+  "users": [
+    {
+      "id": "owner",
+      "username": "رسول الدين",
+      "password": "1324",
+      "owner": true
+    }
+  ],
+  "items": [
+    {
+      "id": "c1",
+      "parent": null,
+      "section": "company",
+      "type": "dashboard",
+      "name": "بوابة الرافدين",
+      "desc": "الملفات والحسابات الداخلية",
+      "color": "orange",
+      "icon": "BR",
+      "logo": "",
+      "link": "",
+      "active": true,
+      "status": "ready",
+      "allowed": [
+        "owner"
+      ],
+      "order": 1,
+      "note": "",
+      "updated": "2026-09-26T00:00:00.000Z"
+    },
+    {
+      "id": "c2",
+      "parent": null,
+      "section": "company",
+      "type": "link",
+      "name": "انهار البصرة",
+      "desc": "الحسابات والكشوفات",
+      "color": "gold",
+      "icon": "AB",
+      "logo": "",
+      "link": "",
+      "active": true,
+      "status": "review",
+      "allowed": [
+        "owner"
+      ],
+      "order": 2,
+      "note": "",
+      "updated": "2026-09-26T00:00:00.000Z"
+    },
+    {
+      "id": "l1",
+      "parent": null,
+      "section": "ledger",
+      "type": "link",
+      "name": "الديون والسلف والأقساط",
+      "desc": "متابعة السلف والأقساط",
+      "color": "gold",
+      "icon": "💳",
+      "logo": "",
+      "link": "",
+      "active": true,
+      "status": "review",
+      "allowed": [
+        "owner"
+      ],
+      "order": 1,
+      "note": "",
+      "updated": "2026-09-26T00:00:00.000Z"
+    },
+    {
+      "id": "s1",
+      "parent": "c1",
+      "section": "internal",
+      "type": "link",
+      "name": "الكشوفات الشهرية",
+      "desc": "عرض الكشوفات الشهرية",
+      "category": "الكشوفات",
+      "color": "gold",
+      "icon": "📊",
+      "logo": "",
+      "link": "",
+      "active": true,
+      "status": "review",
+      "allowed": [
+        "owner"
+      ],
+      "order": 1,
+      "note": "",
+      "updated": "2026-09-26T00:00:00.000Z"
+    },
+    {
+      "id": "s2",
+      "parent": "c1",
+      "section": "internal",
+      "type": "link",
+      "name": "السلف المستلمة",
+      "desc": "عرض السلف المستلمة",
+      "category": "السلف والأقساط",
+      "color": "blue",
+      "icon": "💵",
+      "logo": "",
+      "link": "",
+      "active": true,
+      "status": "review",
+      "allowed": [
+        "owner"
+      ],
+      "order": 2,
+      "note": "",
+      "updated": "2026-09-26T00:00:00.000Z"
+    },
+    {
+      "id": "s3",
+      "parent": "c1",
+      "section": "internal",
+      "type": "link",
+      "name": "الأقساط الشهرية",
+      "desc": "عرض الأقساط الشهرية",
+      "category": "السلف والأقساط",
+      "color": "green",
+      "icon": "🧾",
+      "logo": "",
+      "link": "",
+      "active": true,
+      "status": "review",
+      "allowed": [
+        "owner"
+      ],
+      "order": 3,
+      "note": "",
+      "updated": "2026-09-26T00:00:00.000Z"
+    }
+  ],
+  "logs": []
+}
