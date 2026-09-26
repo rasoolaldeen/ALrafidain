@@ -19,6 +19,12 @@
       "username": "زينب",
       "password": "2002",
       "owner": false
+    },
+    {
+      "id": "umuhojmgn5r19",
+      "username": "rawaa",
+      "password": "1990",
+      "owner": false
     }
   ],
   "items": [
@@ -169,6 +175,10 @@
     }
   ],
   "logs": [
+    {
+      "at": "2026-09-26T00:57:11.543Z",
+      "text": "تمت إضافة المستخدم: rawaa"
+    },
     {
       "at": "2026-09-25T23:12:31.861Z",
       "text": "تم تعديل صفحة الترحيب"
