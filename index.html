@@ -76,7 +76,7 @@ function effectsAdmin(b){
  document.getElementById('effectsForm').onsubmit=ev=>{ev.preventDefault();S.effects={logoEnabled:document.getElementById('fxLogo').checked,logoSpeed:Number(document.getElementById('fxLogoSpeed').value),cardEnabled:document.getElementById('fxCards').checked,cardSpeed:Number(document.getElementById('fxCardSpeed').value),colorOne:document.getElementById('fxColorOne').value,colorTwo:document.getElementById('fxColorTwo').value};logChange('تم تعديل المؤثرات البصرية');applyVisualEffects();toast('تم حفظ المؤثرات البصرية')};
 }
 function esc(v=''){return String(v).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}function toast(t){let x=document.getElementById('toast');x.textContent=t;x.classList.remove('hidden');setTimeout(()=>x.classList.add('hidden'),2200)}function uid(p='i'){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}function curUser(){return previewUser||user}function isOwner(){return !!user?.owner&&!previewUser}function statusText(s){return {ready:'جاهز ✓',review:'قيد التدقيق ⏳',new:'محدث حديثاً ●',archive:'مؤرشف'}[s]||''}function colorOf(k){return (COLORS[k]||COLORS.gold)[1]}function canSee(i){const u=curUser();return u&&(u.owner||i.allowed.includes(u.id))&&i.active}function children(pid){return S.items.filter(i=>i.parent===pid&&canSee(i)).sort((a,b)=>(a.order||0)-(b.order||0))}function topItems(sec){return S.items.filter(i=>!i.parent&&i.section===sec&&canSee(i)).sort((a,b)=>(a.order||0)-(b.order||0))}function logo(i){return i.logo?`<img class="logo" src="${i.logo}" alt="">`:`<span class="logo-fallback" style="color:${colorOf(i.color)}">${esc(i.icon||'📁')}</span>`}
-function login(){applyVisualEffects();app.innerHTML=`<div class="wrap"><form id="login" class="panel login"><div id="loginLogo" class="login-emblem"><span class="emblem-orbit" aria-hidden="true"></span><span class="emblem-orbit second" aria-hidden="true"></span><img class="login-logo" src="${S.branding.loginLogo||WELCOME_EMBLEM}" alt="شعار الشركة"></div><div class="muted" style="margin-top:12px">${esc(S.branding.company)}</div><h1 class="gold">${esc(S.branding.welcome)}</h1><p class="muted">${esc(S.branding.subtitle)}</p><label>اسم المستخدم<input id="lu" class="field" autocomplete="username" name="username" value="${esc(localStorage.getItem(LAST_USER_KEY)||'')}"></label><label>كلمة السر<div class="passwordbox"><input id="lp" type="password" class="field" autocomplete="current-password" name="password"><button class="eye" type="button" data-eye="lp">👁</button></div></label><label class="switch" style="justify-content:center;margin:5px 0 14px"><input id="rememberMe" type="checkbox"> تذكّرني على هذا الجهاز</label><div id="err" class="hidden" style="color:#ff927a;margin-bottom:10px">اسم المستخدم أو كلمة السر غير صحيحة</div><button class="btn goldbtn" style="width:100%">دخول</button><div class="help" style="margin-top:14px">${esc(S.branding.footer)}</div></form></div>`;bindEyes();document.getElementById('login').onsubmit=e=>{e.preventDefault();const n=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;const u=S.users.find(x=>x.username===n&&x.password===p);if(!u)return document.getElementById('err').classList.remove('hidden');user=u;previewUser=null;path=[];try{localStorage.setItem(LAST_USER_KEY,u.username);if(document.getElementById('rememberMe').checked)localStorage.setItem(REMEMBER_KEY,JSON.stringify({id:u.id,until:Date.now()+30*24*60*60*1000}));else localStorage.removeItem(REMEMBER_KEY)}catch(e){}render()}}
+function login(){applyVisualEffects();app.innerHTML=`<div class="wrap"><form id="login" class="panel login"><div id="loginLogo" class="login-emblem"><span class="emblem-orbit" aria-hidden="true"></span><span class="emblem-orbit second" aria-hidden="true"></span><img class="login-logo" src="${S.branding.loginLogo||WELCOME_EMBLEM}" alt="شعار الشركة"></div><div class="muted" style="margin-top:12px">${esc(S.branding.company)}</div><h1 class="gold">${esc(S.branding.welcome)}</h1><p class="muted">${esc(S.branding.subtitle)}</p><label>اسم المستخدم<input id="lu" class="field" autocomplete="username" name="username" value="${esc(localStorage.getItem(LAST_USER_KEY)||'')}"></label><label>كلمة السر<div class="passwordbox"><input id="lp" type="password" class="field" autocomplete="current-password" name="password"><button class="eye" type="button" data-eye="lp">👁</button></div></label><label class="switch" style="justify-content:center;margin:5px 0 14px"><input id="rememberMe" type="checkbox"> تذكّرني على هذا الجهاز</label><div id="err" class="hidden" style="color:#ff927a;margin-bottom:10px">اسم المستخدم أو كلمة السر غير صحيحة</div><button class="btn goldbtn" style="width:100%">دخول</button><button id="refreshPublished" class="btn" type="button" style="width:100%;margin-top:10px">تحديث البيانات</button><div class="help" style="margin-top:14px">${esc(S.branding.footer)}</div></form></div>`;bindEyes();document.getElementById('refreshPublished').onclick=async e=>{const button=e.currentTarget;button.disabled=true;button.textContent='جارِ فحص التحديثات...';try{await checkPublishedUpdates(true)}finally{if(button.isConnected){button.disabled=false;button.textContent='تحديث البيانات'}}};document.getElementById('login').onsubmit=e=>{e.preventDefault();const n=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;const u=S.users.find(x=>x.username===n&&x.password===p);if(!u)return document.getElementById('err').classList.remove('hidden');user=u;previewUser=null;path=[];try{localStorage.setItem(LAST_USER_KEY,u.username);if(document.getElementById('rememberMe').checked)localStorage.setItem(REMEMBER_KEY,JSON.stringify({id:u.id,until:Date.now()+30*24*60*60*1000}));else localStorage.removeItem(REMEMBER_KEY)}catch(e){}render()}}
 function render(){applyVisualEffects();if(!user)return login();const u=curUser();const pid=path.length?path[path.length-1]:null;const dash=pid?S.items.find(i=>i.id===pid):null;app.innerHTML=`<div class="wrap"><div class="panel">${previewUser?`<div class="ownerbar">👁 وضع المعاينة كمستخدم: <b>${esc(previewUser.username)}</b> — <button class="btn" id="stopPreview">العودة للمالك</button></div>`:''}<header class="top"><div style="display:flex;align-items:center;gap:14px">${S.branding.siteLogo?`<img src="${S.branding.siteLogo}" alt="لوكو الموقع" style="width:64px;height:64px;object-fit:contain;border-radius:12px;border:1px solid var(--gold-dim);padding:4px;background:#120d08">`:''}<div><div class="muted">${esc(S.branding.company)}</div><h2 class="gold" style="margin:5px 0">${dash?esc(dash.name):'لوحة الشركات والحسابات'}</h2><div class="muted">مرحباً، ${esc(u.username)}${u.owner?' — المالك / المحاسب العام':''}</div></div></div><div class="actions">${path.length?'<button class="btn" id="back">↩ رجوع</button>':''}${user.owner&&!previewUser?'<button class="btn" id="settings">⚙ الإعدادات</button>':''}<button class="btn danger" id="logout">⏻ خروج</button></div></header><main class="section">${dashboardBody(pid)}</main><footer class="footer"><span>إدارة النظام: رسول الدين</span></footer></div></div>`;bindMain()}
 function dashboardBody(pid){let items=pid?children(pid):[...topItems('company'),...topItems('ledger')];let h=`<div class="toolbar"><div class="searchbox" id="searchBox"><button type="button" id="searchToggle" class="btn searchtoggle" title="بحث" aria-label="فتح البحث">🔎</button><input id="search" class="field searchinput" placeholder="بحث سريع..." aria-label="بحث سريع في العناصر"></div></div>`;if(pid){const d=S.items.find(i=>i.id===pid);h+=`<div class="crumb">الرئيسية ← ${path.map(id=>esc(S.items.find(i=>i.id===id)?.name||'')).join(' ← ')}</div>${d?.desc?`<p class="muted">${esc(d.desc)}</p>`:''}`;const cats=[...new Set(items.map(i=>i.category||'عام'))];h+=`<div id="itemArea">${cats.map(c=>`<div class="category">${esc(c)}</div><div class="grid">${items.filter(i=>(i.category||'عام')===c).map(card).join('')||'<div class="empty">لا توجد عناصر</div>'}</div>`).join('')}</div>`}else{const cs=topItems('company'),ls=topItems('ledger');h+=`<div id="itemArea">${cs.length?`<div class="section-title"><b>الشركات الرئيسية</b><i></i><small class="muted">${cs.length}</small></div><div class="grid">${cs.map(card).join('')}</div>`:''}${ls.length?`<div class="section-title" style="margin-top:${cs.length?'24px':'0'}"><b>المعامل والديون والوكلاء</b><i></i><small class="muted">${ls.length}</small></div><div class="grid">${ls.map(card).join('')}</div>`:''}${!cs.length&&!ls.length?'<div class="empty">لا توجد عناصر متاحة لهذا المستخدم.</div>':''}</div>`}return h}
 function card(i){return `<div class="card" data-name="${esc((i.name+' '+(i.desc||'')+' '+(i.category||'')).toLowerCase())}" style="color:${colorOf(i.color)}">${logo(i)}<button class="card-main" style="border:0;background:none;text-align:right;color:inherit;padding:0" data-open="${i.id}"><b>${esc(i.name)}</b>${i.desc?`<small>${esc(i.desc)}</small>`:''}<span class="badge status-${i.status}">${statusText(i.status)}</span>${isOwner()&&i.type==='link'&&!i.link?'<span class="badge" style="color:#ff9a83;margin-right:6px">⚠ لا يوجد رابط</span>':''}</button><span>‹</span></div>`}
@@ -158,26 +158,27 @@ const APP_SOURCE_REVISION=revisionOf(document.querySelector('style').textContent
 async function updatePublishedData(){
   try{
     const r=await fetch('./data.json?ts='+Date.now(),{cache:'no-store'});
-    if(!r.ok)return false;
+    if(!r.ok)return null;
     const raw=await r.text(),revision=revisionOf(raw);
     let local=null;
     try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
     if(localStorage.getItem(DATA_REVISION_KEY)===revision&&local&&Array.isArray(local.users)&&Array.isArray(local.items))return false;
     const n=JSON.parse(raw);
-    if(!n||!Array.isArray(n.users)||!Array.isArray(n.items)||!n.branding)return false;
+    if(!n||!Array.isArray(n.users)||!Array.isArray(n.items)||!n.branding)return null;
     S=n;
     if(save())localStorage.setItem(DATA_REVISION_KEY,revision);
     return true;
-  }catch(e){return false}
+  }catch(e){return null}
 }
-let updating=false;
-async function checkPublishedUpdates(){
-  if(updating||document.hidden)return;
-  updating=true;
+let updating=false,lastUpdateCheck=Date.now();
+async function checkPublishedUpdates(manual=false){
+  if(updating||(!manual&&document.hidden))return;
+  updating=true;lastUpdateCheck=Date.now();
   try{
     const url=new URL('./index.html',location.href);
     url.searchParams.set('check',Date.now());
     const r=await fetch(url,{cache:'no-store'});
+    if(manual&&!r.ok)throw Error('index');
     if(r.ok){
       const html=await r.text();
       const css=html.match(/<style>([\s\S]*?)<\/style>/);
@@ -189,15 +190,16 @@ async function checkPublishedUpdates(){
         return;
       }
     }
-    if(await updatePublishedData()){
+    const updated=await updatePublishedData();
+    if(updated){
       S.branding=S.branding||{};
       applyAppIcon();
       user=S.users.find(x=>x.id===user?.id)||null;
       previewUser=null;path=[];
       render();
       toast('تم تحديث بيانات البرنامج إلى النسخة المنشورة');
-    }
-  }catch(e){}finally{updating=false}
+    }else if(manual){toast(updated===null?'تعذّر جلب الملفات المنشورة. تحقق من الاتصال وحاول مجدداً':'بياناتك محدّثة بالفعل')}
+  }catch(e){if(manual)toast('تعذّر فحص التحديثات. حاول مجدداً')}finally{updating=false}
 }
 async function boot(){
   await updatePublishedData();
@@ -212,7 +214,7 @@ async function boot(){
     if(!user)localStorage.removeItem(REMEMBER_KEY);
   }catch(e){try{localStorage.removeItem(REMEMBER_KEY)}catch(_){}}
   render();
-  setInterval(checkPublishedUpdates,2*60*1000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkPublishedUpdates()});
+  setInterval(checkPublishedUpdates,20*60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastUpdateCheck>=20*60*1000)checkPublishedUpdates()});
 }boot();})();
 </script></body></html>
