@@ -44,7 +44,8 @@ body{--effect-color-one:#ffbe59;--effect-color-two:#58c9ff;--card-effect-time:6s
 </style></head><body><div id="app"></div><div id="toast" class="toast hidden"></div>
 <script>
 (()=>{'use strict';
-const KEY='rafidain_v7_draft';
+ const KEY='rafidain_v7_draft';
+ const DATA_REVISION_KEY=KEY+'_published_revision';
 const REMEMBER_KEY=KEY+'_remember';
 const DEFAULT_EFFECTS={logoEnabled:true,logoSpeed:1,cardEnabled:false,cardSpeed:6,colorOne:'#ffbe59',colorTwo:'#58c9ff'};
 const LAST_USER_KEY=KEY+'_last_user';
@@ -58,7 +59,7 @@ const defaultState=()=>({branding:{company:'شركة بوابة الرافدين
 {id:'s2',parent:'c1',section:'internal',type:'link',name:'السلف المستلمة',desc:'عرض السلف المستلمة',category:'السلف والأقساط',color:'blue',icon:'💵',logo:'',link:'',active:true,status:'review',allowed:['owner'],order:2,note:'',updated:new Date().toISOString()},
 {id:'s3',parent:'c1',section:'internal',type:'link',name:'الأقساط الشهرية',desc:'عرض الأقساط الشهرية',category:'السلف والأقساط',color:'green',icon:'🧾',logo:'',link:'',active:true,status:'review',allowed:['owner'],order:3,note:'',updated:new Date().toISOString()}]});
 let S;try{S=JSON.parse(localStorage.getItem(KEY))||defaultState()}catch(e){S=defaultState()}S.logs=Array.isArray(S.logs)?S.logs:[];let user=null,path=[],previewUser=null,editing=null,editUser=null;
-const app=document.getElementById('app'); const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}; function logChange(text){S.logs=Array.isArray(S.logs)?S.logs:[];S.logs.unshift({at:new Date().toISOString(),text});S.logs=S.logs.slice(0,20);save()}
+const app=document.getElementById('app'); const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){return false}}; function logChange(text){S.logs=Array.isArray(S.logs)?S.logs:[];S.logs.unshift({at:new Date().toISOString(),text});S.logs=S.logs.slice(0,20);save()}
 function applyVisualEffects(){
  const e={...DEFAULT_EFFECTS,...S.effects};
  document.body.classList.toggle('logo-effects-off',!e.logoEnabled);
@@ -103,28 +104,85 @@ function previewAdmin(b){const others=S.users.filter(u=>!u.owner);b.innerHTML=ot
 
 function checkAdmin(b){const issues=[];S.items.filter(i=>i.active&&i.type==='link'&&!i.link).forEach(i=>issues.push('⚠ «'+i.name+'» بدون رابط'));S.items.filter(i=>i.active&&i.type==='dashboard'&&!S.items.some(x=>x.parent===i.id&&x.active)).forEach(i=>issues.push('⚠ الداشبورد «'+i.name+'» فارغ'));S.users.filter(u=>!u.owner&&!S.items.some(i=>i.active&&i.allowed.includes(u.id))).forEach(u=>issues.push('⚠ المستخدم «'+u.username+'» لا يملك صلاحية لأي عنصر'));S.items.filter(i=>!i.active).forEach(i=>issues.push('ℹ العنصر «'+i.name+'» مخفي'));b.innerHTML=`<div class="note">فحص سريع للإعدادات قبل النسخ الاحتياطي أو الرفع إلى GitHub. لا يغيّر أي شيء.</div><div class="list">${issues.length?issues.map(x=>`<div class="row"><div class="grow">${esc(x)}</div></div>`).join(''):'<div class="empty">✓ لم يتم العثور على ملاحظات واضحة.</div>'}</div>`}
 function logsAdmin(b){const logs=Array.isArray(S.logs)?S.logs:[];b.innerHTML=`<div class="note">آخر 20 تغييراً مسجلاً محلياً للمالك.</div><div class="list">${logs.length?logs.map(l=>`<div class="row"><div class="grow"><b>${esc(l.text)}</b><small class="muted" style="display:block">${new Date(l.at).toLocaleString('ar-IQ')}</small></div></div>`).join(''):'<div class="empty">لا توجد تغييرات مسجلة بعد.</div>'}</div>`}
-function readImage(file,cb){if(!file)return;if(file.size>2*1024*1024)return toast('حجم الصورة كبير. اختر صورة أقل من 2MB');const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(file)}function bindEyes(){document.querySelectorAll('[data-eye]').forEach(b=>b.onclick=()=>{const i=document.getElementById(b.dataset.eye);i.type=i.type==='password'?'text':'password'})}
+async function readImage(file,cb){
+  if(!file)return;
+  if(!file.type.startsWith('image/'))return toast('اختر ملف صورة صالح');
+  if(file.size>15*1024*1024)return toast('الصورة كبيرة جداً. اختر صورة أقل من 15MB');
+  const url=URL.createObjectURL(file);
+  try{
+    const img=new Image();img.src=url;await img.decode();
+    let width=Math.min(img.naturalWidth,420),height=Math.min(img.naturalHeight,420);
+    const ratio=Math.min(1,420/Math.max(img.naturalWidth,img.naturalHeight));
+    width=Math.max(1,Math.round(img.naturalWidth*ratio));height=Math.max(1,Math.round(img.naturalHeight*ratio));
+    const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('canvas');
+    let result='';
+    for(let attempt=0;attempt<4;attempt++){
+      canvas.width=width;canvas.height=height;
+      ctx.clearRect(0,0,width,height);
+      ctx.drawImage(img,0,0,width,height);
+      const webp=canvas.toDataURL('image/webp',.78);
+      const png=canvas.toDataURL('image/png');
+      result=webp.startsWith('data:image/webp')&&webp.length<png.length?webp:png;
+      if(result.length<200000||Math.max(width,height)<=120)break;
+      width=Math.max(1,Math.round(width*.75));height=Math.max(1,Math.round(height*.75));
+    }
+    cb(result);
+  }catch(e){toast('تعذّر تصغير الصورة. جرّب صورة PNG أو JPG أو WebP')}finally{URL.revokeObjectURL(url)}
+}function bindEyes(){document.querySelectorAll('[data-eye]').forEach(b=>b.onclick=()=>{const i=document.getElementById(b.dataset.eye);i.type=i.type==='password'?'text':'password'})}
 function applyAppIcon(){
   const src=(S.branding&&S.branding.siteLogo)||'./icon-192.png';
   const fav=document.getElementById('favicon');if(fav)fav.href=src;
   const apple=document.getElementById('appleTouchIcon');if(apple)apple.href=src;
 }
-async function boot(){
-  // إذا توجد تعديلات محلية محفوظة في هذا المتصفح، لا نستبدلها بملف data.json عند كل تحديث للصفحة.
-  // data.json يُستخدم فقط كبداية على الأجهزة/المتصفحات التي لا تملك نسخة محلية بعد.
-  let local=null;
-  try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
-  if(local&&Array.isArray(local.users)&&Array.isArray(local.items)&&local.branding){
-    S=local;
-  }else{
-    try{
-      const r=await fetch('./data.json?ts='+Date.now(),{cache:'no-store'});
-      if(r.ok){
-        const n=await r.json();
-        if(n&&Array.isArray(n.users)&&Array.isArray(n.items)&&n.branding){S=n;save()}
+function revisionOf(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)+':'+text.length}
+const APP_SOURCE_REVISION=revisionOf(document.querySelector('style').textContent+document.currentScript.textContent);
+async function updatePublishedData(){
+  try{
+    const r=await fetch('./data.json?ts='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return false;
+    const raw=await r.text(),revision=revisionOf(raw);
+    let local=null;
+    try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+    if(localStorage.getItem(DATA_REVISION_KEY)===revision&&local&&Array.isArray(local.users)&&Array.isArray(local.items))return false;
+    const n=JSON.parse(raw);
+    if(!n||!Array.isArray(n.users)||!Array.isArray(n.items)||!n.branding)return false;
+    S=n;
+    if(save())localStorage.setItem(DATA_REVISION_KEY,revision);
+    return true;
+  }catch(e){return false}
+}
+let updating=false;
+async function checkPublishedUpdates(){
+  if(updating||document.hidden)return;
+  updating=true;
+  try{
+    const url=new URL('./index.html',location.href);
+    url.searchParams.set('check',Date.now());
+    const r=await fetch(url,{cache:'no-store'});
+    if(r.ok){
+      const html=await r.text();
+      const css=html.match(/<style>([\s\S]*?)<\/style>/);
+      const js=html.match(/<script>([\s\S]*?)<\/script>/);
+      if(css&&js&&revisionOf(css[1]+js[1])!==APP_SOURCE_REVISION){
+        const next=new URL(location.href);
+        next.searchParams.set('v',Date.now());
+        location.replace(next.href);
+        return;
       }
-    }catch(e){}
-  }
+    }
+    if(await updatePublishedData()){
+      S.branding=S.branding||{};
+      applyAppIcon();
+      user=S.users.find(x=>x.id===user?.id)||null;
+      previewUser=null;path=[];
+      render();
+      toast('تم تحديث بيانات البرنامج إلى النسخة المنشورة');
+    }
+  }catch(e){}finally{updating=false}
+}
+async function boot(){
+  await updatePublishedData();
   S.branding=S.branding||{};
   S.branding.siteLogo=S.branding.siteLogo||'';
   S.branding.loginLogo=S.branding.loginLogo||'';
@@ -136,5 +194,7 @@ async function boot(){
     if(!user)localStorage.removeItem(REMEMBER_KEY);
   }catch(e){try{localStorage.removeItem(REMEMBER_KEY)}catch(_){}}
   render();
+  setInterval(checkPublishedUpdates,2*60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkPublishedUpdates()});
 }boot();})();
 </script></body></html>
